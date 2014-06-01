@@ -20,7 +20,7 @@ stream.on('data', function (msg) {
 })
 
 setInterval(function () {
-  stream.write(new Date())
+  stream.write(new Buffer(new Date().toString(), 'utf8'))
 }, 1000)
 
 ```
