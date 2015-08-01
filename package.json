@@ -10,7 +10,7 @@
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
   },
-  "bin": "./bin",
+  "bin": "./bin.js",
   "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://dominictarr.com)",
   "license": "MIT"
 }
