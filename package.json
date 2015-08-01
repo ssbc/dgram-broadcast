@@ -1,7 +1,7 @@
 {
   "name": "broadcast-stream",
   "description": "a more obvious interface for local udp broadcast",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "homepage": "https://github.com/dominictarr/broadcast-stream",
   "repository": {
     "type": "git",
