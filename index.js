@@ -8,6 +8,11 @@ module.exports = function (port, loopback) {
   var addresses = {}
   var socket = udp.createSocket('udp4')
 
+  process.on('exit', function () {
+    socket.dropMembership('255.255.255.255')
+    socket.close()
+  })
+
   socket.readable = socket.writable = true
 
   socket.write = function (message) {
