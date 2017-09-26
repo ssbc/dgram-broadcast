@@ -6,7 +6,7 @@ var os = require('os')
 module.exports = function (port, loopback) {
 
   var addresses = {}
-  var socket = udp.createSocket({type: udp4, reuseAddr: true})
+  var socket = udp.createSocket({type: 'udp4', reuseAddr: true})
 
   process.on('exit', function () {
     socket.dropMembership('255.255.255.255')
