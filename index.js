@@ -8,10 +8,11 @@ module.exports = function (port, loopback) {
   var addresses = {}
   var socket = udp.createSocket({type: 'udp4', reuseAddr: true})
 
-  process.on('exit', function () {
-    socket.dropMembership('255.255.255.255')
-    socket.close()
-  })
+// disable to test if this fixes: https://github.com/dominictarr/broadcast-stream/issues/5
+//  process.on('exit', function () {
+//    socket.dropMembership('255.255.255.255')
+//    socket.close()
+//  })
 
   socket.readable = socket.writable = true
 
