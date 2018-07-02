@@ -3,23 +3,30 @@ var udp = require('dgram')
 var pipe = require('stream').prototype.pipe
 var os = require('os')
 
-module.exports = function (port, loopback) {
+module.exports = function (port, loopback, family='IPv4') {
+  const familySettings = {
+    IPv4: {
+      type: 'udp4',
+      broadcastAddress: '255.255.255.255',
+      local: '0.0.0.0'
+    },
+    IPv6: {
+      type: 'udp6',
+      broadcastAddress: 'ff02::114', // dns-sd experimental
+      localBind: '::'
+    }
+  }
+  const { type, broadcastAddress } = familySettings[family]
 
-  var addresses = {}
-  var socket = udp.createSocket({type: 'udp4', reuseAddr: true})
-
-// disable to test if this fixes: https://github.com/dominictarr/broadcast-stream/issues/5
-//  process.on('exit', function () {
-//    socket.dropMembership('255.255.255.255')
-//    socket.close()
-//  })
+  const addresses = new Set()
+  const socket = udp.createSocket({type, reuseAddr: true})
 
   socket.readable = socket.writable = true
 
   socket.write = function (message) {
     if('string' === typeof message)
       message = new Buffer(message, 'utf8')
-    socket.send(message, 0, message.length, port, '255.255.255.255')
+    socket.send(message, 0, message.length, port, broadcastAddress)
     return true
   }
 
@@ -34,7 +41,7 @@ module.exports = function (port, loopback) {
   var latest = null
 
   socket.on('message', function (msg, other) {
-    if(addresses[other.address] && other.port === port) {
+    if(addresses.has(other.address) && other.port === port) {
       if(loopback === false) return
       msg.loopback = true
     }
@@ -66,14 +73,22 @@ module.exports = function (port, loopback) {
     return this
   }
 
-  socket.bind(port)
+  socket.bind(port, localBind)
   socket.on('listening', function () {
-    var ifaces = os.networkInterfaces()
-    for(var k in ifaces)
-      ifaces[k].forEach(function (address) {
-        addresses[address.address] = true
-      })
-    socket.setBroadcast(true)
+    const interfaces = os.networkInterfaces()
+    const allAddresses = [].concat(...Object.values(interfaces))
+    // Only listen on interfaces with the same family
+    addresses.add(allAddresses
+      .filter(({family: localFamily}) => family === localFamily)
+      .map(({address}) => address))
+    if (family === 'IPv4') {
+      socket.setBroadcast(true)
+    } else {
+      socket.setMulticastLoopback(loopback)
+      for (let iface of Object.keys(interfaces)) {
+        socket.addMembership(broadcastAddress, `::%${iface}`)
+      }
+    }
   })
 
   socket.pipe = pipe
