@@ -8,7 +8,7 @@ module.exports = function (port, loopback, family='IPv4') {
     IPv4: {
       type: 'udp4',
       broadcastAddress: '255.255.255.255',
-      local: '0.0.0.0'
+      localBind: '0.0.0.0'
     },
     IPv6: {
       type: 'udp6',
@@ -16,7 +16,7 @@ module.exports = function (port, loopback, family='IPv4') {
       localBind: '::'
     }
   }
-  const { type, broadcastAddress } = familySettings[family]
+  const { type, localBind, broadcastAddress } = familySettings[family]
 
   const addresses = new Set()
   const socket = udp.createSocket({type, reuseAddr: true})
