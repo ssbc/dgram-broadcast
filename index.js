@@ -1,22 +1,26 @@
+// we udp4 broadcast on ipv4
+// we udp6 multicast on ipv6
 
 var udp = require('dgram')
 var pipe = require('stream').prototype.pipe
 var os = require('os')
 
 module.exports = function (port, loopback, family='IPv4') {
-  const familySettings = {
+  const { type, broadcastAddress, localBind, broadcast } = {
     IPv4: {
       type: 'udp4',
       broadcastAddress: '255.255.255.255',
-      localBind: '0.0.0.0'
+      localBind: '0.0.0.0',
+      broadcast: true
     },
     IPv6: {
       type: 'udp6',
       broadcastAddress: 'ff02::114', // dns-sd experimental
-      localBind: '::'
+      localBind: '::',
+      broadcast: false,
     }
-  }
-  const { type, localBind, broadcastAddress } = familySettings[family]
+  }[family]
+  if (family==='IPv6') loopback = true
 
   const addresses = new Set()
   const socket = udp.createSocket({type, reuseAddr: true})
@@ -24,9 +28,12 @@ module.exports = function (port, loopback, family='IPv4') {
   socket.readable = socket.writable = true
 
   socket.write = function (message) {
-    if('string' === typeof message)
+    if ('string' === typeof message) {
       message = new Buffer(message, 'utf8')
-    socket.send(message, 0, message.length, port, broadcastAddress)
+    }
+    const iface = 'en0'
+    let address = family === 'IPv4' ? broadcastAddress : `${broadcastAddress}%${iface}`
+    socket.send(message, 0, message.length, port, address)
     return true
   }
 
@@ -81,13 +88,13 @@ module.exports = function (port, loopback, family='IPv4') {
     addresses.add(allAddresses
       .filter(({family: localFamily}) => family === localFamily)
       .map(({address}) => address))
-    if (family === 'IPv4') {
-      socket.setBroadcast(true)
-    } else {
-      socket.setMulticastLoopback(loopback)
-      for (let iface of Object.keys(interfaces)) {
-        socket.addMembership(broadcastAddress, `::%${iface}`)
-      }
+
+    socket.setBroadcast(broadcast)
+    socket.setMulticastLoopback(loopback)
+
+    if (family === 'IPv4') return
+    for (let iface of Object.keys(interfaces)) {
+      socket.addMembership(broadcastAddress, `::%${iface}`)
     }
   })
 
