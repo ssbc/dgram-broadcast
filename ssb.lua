@@ -12,9 +12,10 @@ local data_dis = Dissector.get("data")
 
 function string:split(sep)
    local sep, fields = sep or ":", {}
-   local pattern = string.format("([^%s]+)", sep)
-   self:gsub(pattern, function(c) fields[#fields+1] = c end)
-   return table.unpack(fields)
+   for w in (self .. sep):gmatch("([^" .. sep .. "]*)" .. sep) do
+     table.insert(fields, w)
+   end
+   return fields
 end
 
 function ssb_protocol.dissector(buffer, pinfo, tree)
@@ -24,9 +25,12 @@ function ssb_protocol.dissector(buffer, pinfo, tree)
     pinfo.cols.protocol = ssb_protocol.name
 
     local subtree = tree:add(ssb_protocol, buffer())
-    local net, shs = buffer():string():split("~")
-    local proto, ip, port = net:split()
-    local prefix, key = shs:split()
+    local net, shs = table.unpack(buffer():string():split("~"))
+    local network = net:split()
+    local proto = table.remove(network, 1)
+    local port = table.remove(network)
+    local ip = table.concat(network, ":")
+    local prefix, key = table.unpack(shs:split())
 
     local length = proto:len() + 1
 
