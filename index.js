@@ -1,3 +1,5 @@
+'use strict'
+
 var udp = require('dgram')
 var pipe = require('stream').prototype.pipe
 var os = require('os')
@@ -6,25 +8,33 @@ var os = require('os')
  * Default udp4 broadcast to 255.255.255.255
  * Will udp6 multicast to ff02::114 with (family = 'IPv6')
  */
-module.exports = function (port, loopback, family = 'IPv4', broadcastAddress = '255.255.255.255') {
-  const { type, localBind, broadcast } = {
+module.exports = function (port, loopback) {
+  var family = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'IPv4'
+
+  var config = {
     IPv4: {
       type: 'udp4',
-      broadcastAddress: broadcastAddress || '255.255.255.255',
       localBind: '0.0.0.0',
+      broadcastAddress: '255.255.255.255',
       broadcast: true
     },
     IPv6: {
       type: 'udp6',
-      broadcastAddress: broadcastAddress || 'ff02::114', // dns-sd experimental
       localBind: '::',
+      broadcastAddress: 'ff02::114', // dns-sd experimental
       broadcast: false
     }
   }[family]
+
+  var type = config.type
+  var localBind = config.localBind
+  var broadcast = config.broadcast
+  var broadcastAddress = config.broadcastAddress
+
   if (family === 'IPv6') loopback = true
 
-  const addresses = new Set()
-  const socket = udp.createSocket({type, reuseAddr: true})
+  var addresses = new Set()
+  var socket = udp.createSocket({ type: type, reuseAddr: true })
 
   socket.readable = socket.writable = true
 
@@ -32,9 +42,7 @@ module.exports = function (port, loopback, family = 'IPv4', broadcastAddress = '
     if (typeof message === 'string') {
       message = Buffer.from(message, 'utf8')
     }
-    const iface = 'en0'
-    let address = family === 'IPv4' ? broadcastAddress : `${broadcastAddress}%${iface}`
-    socket.send(message, 0, message.length, port, address)
+    socket.send(message, 0, message.length, port, 'ff02::114')
     return true
   }
 
@@ -59,7 +67,10 @@ module.exports = function (port, loopback, family = 'IPv4', broadcastAddress = '
 
     // if paused, remember the latest item.
     // otherwise just drop those messages.
-    if (socket.paused) { latest = msg; return latest }
+    if (socket.paused) {
+      latest = msg
+      return latest
+    }
 
     latest = null
     socket.emit('data', msg)
@@ -82,20 +93,24 @@ module.exports = function (port, loopback, family = 'IPv4', broadcastAddress = '
 
   socket.bind(port, localBind)
   socket.on('listening', function () {
-    const interfaces = os.networkInterfaces()
-    const allAddresses = [].concat(...Object.values(interfaces))
-    // Only listen on interfaces with the same family
-    addresses.add(allAddresses
-      .filter(({family: localFamily}) => family === localFamily)
-      .map(({address}) => address))
+    var interfaces = os.networkInterfaces()
+    Object.values(interfaces)
+      .forEach(function (address) {
+        if (address.family === family) {
+          addresses.add(address.address)
+        }
+      })
 
     socket.setBroadcast(broadcast)
     socket.setMulticastLoopback(loopback)
 
     if (family === 'IPv4') return
-    for (let iface of Object.keys(interfaces)) {
-      socket.addMembership(broadcastAddress, `::%${iface}`)
-    }
+
+    // FIXME: can we set multiple multicast interfaces?
+    // FIXME: or can we have multiple memberships?
+    var iface = 'lo0'
+    socket.setMulticastInterface('::%' + iface)
+    socket.addMembership(broadcastAddress, '::%' + iface)
   })
 
   socket.pipe = pipe
