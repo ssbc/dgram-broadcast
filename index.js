@@ -8,8 +8,8 @@ var os = require('os')
  * Default udp4 broadcast to 255.255.255.255
  * Will udp6 multicast to ff02::114 with (family = 'IPv6')
  */
-module.exports = function (port, loopback) {
-  var family = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'IPv4'
+module.exports = function (port, loopback, family) {
+  family = family || 'IPv4'
 
   var config = {
     IPv4: {
