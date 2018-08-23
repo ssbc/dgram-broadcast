@@ -33,7 +33,7 @@ module.exports = function (port, loopback) {
 
   if (family === 'IPv6') loopback = true
 
-  var addresses = new Set()
+  var addresses = []
   var socket = udp.createSocket({ type: type, reuseAddr: true })
 
   socket.readable = socket.writable = true
@@ -57,7 +57,9 @@ module.exports = function (port, loopback) {
   var latest = null
 
   socket.on('message', function (msg, other) {
-    if (addresses.has(other.address) && other.port === port) {
+    console.log(msg.toString())
+
+    if (!!addresses[other.address] && other.port === port) {
       if (loopback === false) return
       msg.loopback = true
     }
@@ -97,7 +99,7 @@ module.exports = function (port, loopback) {
     Object.values(interfaces)
       .forEach(function (address) {
         if (address.family === family) {
-          addresses.add(address.address)
+          addresses.push(address.address)
         }
       })
 

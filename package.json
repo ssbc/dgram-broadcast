@@ -8,12 +8,15 @@
     "url": "git://github.com/dominictarr/broadcast-stream.git"
   },
   "scripts": {
-    "test": "set -e; for t in test/*.js; do node $t; done"
+    "test": "jshint bin.js index.js"
   },
   "bin": "./bin.js",
   "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://dominictarr.com)",
   "contributors": [
     "Jonathan Dahan <hi@jonathan.is> (https://jonathan.is)"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "jshint": "^2.9.6"
+  }
 }

@@ -44,6 +44,10 @@ udp does not have back-pressure, but the stream api does.
 if the stream is paused, it will just drop messages.
 if when the stream is resumed, it will emit the latest message.
 
+## Contributing
+
+Please adhere to es5 - a jshintrc file is configured and can be run with `npm test`.
+
 ## License
 
 MIT
