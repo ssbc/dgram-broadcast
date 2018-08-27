@@ -1,16 +1,22 @@
 {
   "name": "broadcast-stream",
   "description": "a more obvious interface for local udp broadcast",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "homepage": "https://github.com/dominictarr/broadcast-stream",
   "repository": {
     "type": "git",
     "url": "git://github.com/dominictarr/broadcast-stream.git"
   },
   "scripts": {
-    "test": "set -e; for t in test/*.js; do node $t; done"
+    "test": "jshint bin.js index.js"
   },
   "bin": "./bin.js",
   "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://dominictarr.com)",
-  "license": "MIT"
+  "contributors": [
+    "Jonathan Dahan <hi@jonathan.is> (https://jonathan.is)"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "jshint": "^2.9.6"
+  }
 }
