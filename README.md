@@ -26,10 +26,12 @@ setInterval(() => {
 
 ## API
 
-### `stream = createStream(port, loopback=true)`
+### `stream = createStream(port, dest=['255.255.255.255'], loopback=true)`
 
-Stream on the port `port`. If `loopback` is false, do not output your own
-messages. Returns a Node.js stream.
+Stream on the port `port`. `dest` is an array of all the destination addresses
+on which to broadcast, by default it has only `255.255.255.255` as the
+destination. If `loopback` is false, do not output your own messages. Returns a
+Node.js stream.
 
 ### `stream.on('data', (msg) => { ... })`
 
