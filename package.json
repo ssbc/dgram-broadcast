@@ -7,6 +7,9 @@
     "type": "git",
     "url": "git://github.com/ssbc/dgram-broadcast.git"
   },
+  "files": [
+    "index.js"
+  ],
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
   },

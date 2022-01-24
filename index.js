@@ -1,74 +1,74 @@
-const udp = require('dgram');
-const pipe = require('stream').prototype.pipe;
-const os = require('os');
+const udp = require('dgram')
+const pipe = require('stream').prototype.pipe
+const os = require('os')
 
 module.exports = function createStream(port, loopback) {
-  const addresses = {};
-  const socket = udp.createSocket({type: 'udp4', reuseAddr: true});
+  const addresses = {}
+  const socket = udp.createSocket({ type: 'udp4', reuseAddr: true })
 
-  socket.readable = socket.writable = true;
+  socket.readable = socket.writable = true
 
   socket.write = function write(message) {
-    if (typeof message === 'string') message = Buffer.from(message, 'utf8');
-    socket.send(message, 0, message.length, port, '255.255.255.255');
-    return true;
-  };
+    if (typeof message === 'string') message = Buffer.from(message, 'utf8')
+    socket.send(message, 0, message.length, port, '255.255.255.255')
+    return true
+  }
 
   socket.end = function end() {
-    socket.close();
-  };
+    socket.close()
+  }
 
   socket.on('close', function close() {
-    socket.emit('end');
-  });
+    socket.emit('end')
+  })
 
-  let latestMsg = null;
+  let latestMsg = null
 
   socket.on('message', function onMessage(msg, other) {
     if (addresses[other.address] && other.port === port) {
-      if (loopback === false) return;
-      msg.loopback = true;
+      if (loopback === false) return
+      msg.loopback = true
     }
 
-    msg.port = other.port;
-    msg.address = other.address;
+    msg.port = other.port
+    msg.address = other.address
 
     // If paused, remember the latest message,
     // otherwise just drop those messages.
-    if (socket.paused) return (latestMsg = msg);
+    if (socket.paused) return (latestMsg = msg)
 
-    latestMsg = null;
-    socket.emit('data', msg);
-  });
+    latestMsg = null
+    socket.emit('data', msg)
+  })
 
   socket.pause = function pause() {
-    socket.paused = true;
-    return this;
-  };
+    socket.paused = true
+    return this
+  }
 
   socket.resume = function resume() {
-    socket.paused = false;
+    socket.paused = false
     if (latestMsg) {
-      const msg = latestMsg;
-      latestMsg = null;
-      socket.emit('data', msg);
+      const msg = latestMsg
+      latestMsg = null
+      socket.emit('data', msg)
     }
-    return this;
-  };
+    return this
+  }
 
-  socket.bind(port);
+  socket.bind(port)
 
   socket.on('listening', function onListening() {
-    const ifaces = os.networkInterfaces();
+    const ifaces = os.networkInterfaces()
     for (const k of Object.keys(ifaces)) {
       for (const address of ifaces[k]) {
-        addresses[address.address] = true;
+        addresses[address.address] = true
       }
     }
-    socket.setBroadcast(true);
-  });
+    socket.setBroadcast(true)
+  })
 
-  socket.pipe = pipe;
+  socket.pipe = pipe
 
-  return socket;
-};
+  return socket
+}
