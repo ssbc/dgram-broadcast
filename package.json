@@ -1,16 +1,22 @@
 {
   "name": "broadcast-stream",
-  "description": "a more obvious interface for local udp broadcast",
+  "description": "A more obvious interface for local UDP broadcast",
   "version": "0.2.2",
-  "homepage": "https://github.com/dominictarr/broadcast-stream",
+  "homepage": "https://github.com/ssbc/broadcast-stream",
   "repository": {
     "type": "git",
-    "url": "git://github.com/dominictarr/broadcast-stream.git"
+    "url": "git://github.com/ssbc/broadcast-stream.git"
   },
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
   },
+  "engines": {
+    "node": ">=12"
+  },
   "bin": "./bin.js",
   "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://dominictarr.com)",
+  "contributors": [
+    "Andre 'Staltz' Medeiros <contact@staltz.com>"
+  ],
   "license": "MIT"
 }

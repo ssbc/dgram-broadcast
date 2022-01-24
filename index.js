@@ -1,82 +1,74 @@
+const udp = require('dgram');
+const pipe = require('stream').prototype.pipe;
+const os = require('os');
 
-var udp = require('dgram')
-var pipe = require('stream').prototype.pipe
-var os = require('os')
+module.exports = function broadcastStream(port, loopback) {
+  const addresses = {};
+  const socket = udp.createSocket({type: 'udp4', reuseAddr: true});
 
-module.exports = function (port, loopback) {
+  socket.readable = socket.writable = true;
 
-  var addresses = {}
-  var socket = udp.createSocket({type: 'udp4', reuseAddr: true})
+  socket.write = function write(message) {
+    if (typeof message === 'string') message = Buffer.from(message, 'utf8');
+    socket.send(message, 0, message.length, port, '255.255.255.255');
+    return true;
+  };
 
-// disable to test if this fixes: https://github.com/dominictarr/broadcast-stream/issues/5
-//  process.on('exit', function () {
-//    socket.dropMembership('255.255.255.255')
-//    socket.close()
-//  })
+  socket.end = function end() {
+    socket.close();
+  };
 
-  socket.readable = socket.writable = true
+  socket.on('close', function close() {
+    socket.emit('end');
+  });
 
-  socket.write = function (message) {
-    if('string' === typeof message)
-      message = new Buffer(message, 'utf8')
-    socket.send(message, 0, message.length, port, '255.255.255.255')
-    return true
-  }
+  let latestMsg = null;
 
-  socket.end = function () {
-    socket.close()
-  }
-
-  socket.on('close', function () {
-    socket.emit('end')
-  })
-
-  var latest = null
-
-  socket.on('message', function (msg, other) {
-    if(addresses[other.address] && other.port === port) {
-      if(loopback === false) return
-      msg.loopback = true
+  socket.on('message', function onMessage(msg, other) {
+    if (addresses[other.address] && other.port === port) {
+      if (loopback === false) return;
+      msg.loopback = true;
     }
 
-    msg.port = other.port
-    msg.address = other.address
+    msg.port = other.port;
+    msg.address = other.address;
 
-    //if paused, remember the latest item.
-    //otherwise just drop those messages.
-    if(socket.paused)
-      return latest = msg
+    // If paused, remember the latest message,
+    // otherwise just drop those messages.
+    if (socket.paused) return (latestMsg = msg);
 
-    latest = null
-    socket.emit('data', msg)
-  })
+    latestMsg = null;
+    socket.emit('data', msg);
+  });
 
-  socket.pause = function () {
-    socket.paused = true
-    return this
-  }
+  socket.pause = function pause() {
+    socket.paused = true;
+    return this;
+  };
 
-  socket.resume = function () {
-    socket.paused = false
-    if(latest) {
-      var msg = latest
-      latest = null
-      socket.emit('data', msg)
+  socket.resume = function resume() {
+    socket.paused = false;
+    if (latestMsg) {
+      const msg = latestMsg;
+      latestMsg = null;
+      socket.emit('data', msg);
     }
-    return this
-  }
+    return this;
+  };
 
-  socket.bind(port)
-  socket.on('listening', function () {
-    var ifaces = os.networkInterfaces()
-    for(var k in ifaces)
-      ifaces[k].forEach(function (address) {
-        addresses[address.address] = true
-      })
-    socket.setBroadcast(true)
-  })
+  socket.bind(port);
 
-  socket.pipe = pipe
+  socket.on('listening', function onListening() {
+    const ifaces = os.networkInterfaces();
+    for (const k of Object.keys(ifaces)) {
+      for (const address of ifaces[k]) {
+        addresses[address.address] = true;
+      }
+    }
+    socket.setBroadcast(true);
+  });
 
-  return socket
-}
+  socket.pipe = pipe;
+
+  return socket;
+};
