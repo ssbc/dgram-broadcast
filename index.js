@@ -2,7 +2,11 @@ const udp = require('dgram')
 const pipe = require('stream').prototype.pipe
 const os = require('os')
 
-module.exports = function createStream(port, loopback) {
+module.exports = function createStream(
+  port,
+  dest = ['255.255.255.255'],
+  loopback = true
+) {
   const addresses = {}
   const socket = udp.createSocket({ type: 'udp4', reuseAddr: true })
 
@@ -10,7 +14,9 @@ module.exports = function createStream(port, loopback) {
 
   socket.write = function write(message) {
     if (typeof message === 'string') message = Buffer.from(message, 'utf8')
-    socket.send(message, 0, message.length, port, '255.255.255.255')
+    for (const destIP of dest) {
+      socket.send(message, 0, message.length, port, destIP)
+    }
     return true
   }
 
@@ -26,7 +32,7 @@ module.exports = function createStream(port, loopback) {
 
   socket.on('message', function onMessage(msg, other) {
     if (addresses[other.address] && other.port === port) {
-      if (loopback === false) return
+      if (!loopback) return
       msg.loopback = true
     }
 
