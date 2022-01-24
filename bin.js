@@ -1,10 +1,10 @@
 #! /usr/bin/env node
 
-const createUdpStream = require('./');
+const createStream = require('./');
 
 const port = +process.argv[2] || 8999;
 
-const stream = createUdpStream(port);
+const stream = createStream(port);
 
 stream.on('data', function (message) {
   console.error(message.toString());

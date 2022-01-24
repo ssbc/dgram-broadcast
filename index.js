@@ -2,7 +2,7 @@ const udp = require('dgram');
 const pipe = require('stream').prototype.pipe;
 const os = require('os');
 
-module.exports = function broadcastStream(port, loopback) {
+module.exports = function createStream(port, loopback) {
   const addresses = {};
   const socket = udp.createSocket({type: 'udp4', reuseAddr: true});
 

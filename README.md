@@ -1,8 +1,8 @@
-# broadcast-stream
+# dgram-broadcast
 
 A more obvious dgram broadcast.
 
-`broadcast-stream` has the correct defaults to just work for broadcast on your
+`dgram-broadcast` has the correct defaults to just work for broadcast on your
 local area network.
 
 ## Example
@@ -10,7 +10,7 @@ local area network.
 Broadcast on port `8999` on your local area network.
 
 ```js
-const createStream = require('broadcast-stream');
+const createStream = require('dgram-broadcast');
 
 const stream = createStream(8999);
 
