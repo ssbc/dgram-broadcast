@@ -10,28 +10,28 @@ local area network.
 Broadcast on port `8999` on your local area network.
 
 ```js
-const createStream = require('dgram-broadcast');
+const createStream = require('dgram-broadcast')
 
-const stream = createStream(8999);
+const stream = createStream(8999)
 
 stream.on('data', (msg) => {
-  console.log(msg.toString());
-  console.log(msg.address, msg.port, msg.echo);
-});
+  console.log(msg.toString())
+  console.log(msg.address, msg.port, msg.echo)
+})
 
 setInterval(() => {
-  stream.write(Buffer.from(new Date().toString(), 'utf8'));
-}, 1000);
+  stream.write(Buffer.from(new Date().toString(), 'utf8'))
+}, 1000)
 ```
 
 ## API
 
-### `stream = createStream(port, dest=['255.255.255.255'], loopback=true)`
+### `stream = createStream(port, loopback=true, dest=['255.255.255.255'])`
 
-Stream on the port `port`. `dest` is an array of all the destination addresses
-on which to broadcast, by default it has only `255.255.255.255` as the
-destination. If `loopback` is false, do not output your own messages. Returns a
-Node.js stream.
+Stream on the port `port`. `If `loopback` is false, do not output your own
+messages. Returns a Node.js stream. `dest` is an array of all the destination
+addresses on which to broadcast, by default it has only `255.255.255.255` as the
+destination.
 
 ### `stream.on('data', (msg) => { ... })`
 

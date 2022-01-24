@@ -4,8 +4,8 @@ const os = require('os')
 
 module.exports = function createStream(
   port,
-  dest = ['255.255.255.255'],
-  loopback = true
+  loopback = true,
+  destinations = ['255.255.255.255']
 ) {
   const addresses = {}
   const socket = udp.createSocket({ type: 'udp4', reuseAddr: true })
@@ -14,8 +14,8 @@ module.exports = function createStream(
 
   socket.write = function write(message) {
     if (typeof message === 'string') message = Buffer.from(message, 'utf8')
-    for (const destIP of dest) {
-      socket.send(message, 0, message.length, port, destIP)
+    for (const destination of destinations) {
+      socket.send(message, 0, message.length, port, destination)
     }
     return true
   }
