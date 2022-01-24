@@ -1,16 +1,19 @@
 #! /usr/bin/env node
 
-var createUdpStream = require('./')
+const createStream = require('./')
 
-var port = (+process.argv[2]) || 8999
+const port = +process.argv[2] || 8999
 
-var stream = createUdpStream(port)
+const stream = createStream(port)
 
 stream.on('data', function (message) {
   console.error(message.toString())
-  console.log(message.address + ':' + message.port, message.loopback ? 'loopback' : '')
+  console.log(
+    message.address + ':' + message.port,
+    message.loopback ? 'loopback' : ''
+  )
 })
 
 setInterval(function () {
-  stream.write(Date.now()+'\n')
+  stream.write(Date.now() + '\n')
 }, 1000)
